@@ -1,6 +1,6 @@
 # OPTPI: optimization as sampling with path integrals
 
-Presentation: <https://saeidtafazzol.github.io/OPTPI/> (`index.html`).
+Tutorial: <https://saeidtafazzol.github.io/OPTPI/> (`index.html`).
 
 A path integral sampler trained with the forward KL (Path Integral Cross-Entropy, PICE). It learns a drift
 u_θ(t, x) so that the SDE dX = u_θ dt + σ(t) dW, started at a point, ends at samples of exp(−U(x)/T) for an energy U.

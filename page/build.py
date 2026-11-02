@@ -1,4 +1,4 @@
-"""Build index.html (the presentation) from page/template.html and a toy training run (toy/train.py).
+"""Build index.html (the tutorial) from page/template.html and a toy training run (toy/train.py).
 
 Inlines the toy landscape, the run's paths, weights and drift field for Fig. 4, and the numbers quoted in Section 3.2.
 KaTeX and Plotly load from jsDelivr (pinned in the template).
