@@ -11,7 +11,10 @@ u_θ(t, x) so that the SDE dX = u_θ dt + σ(t) dW, started at a point, ends at 
 PI.py            the PICE sampler, for any energy U written in JAX
 toy/energy.py    the 2-D toy energy (six basins and a plateau)
 toy/train.py     trains PICE on the toy and records every iteration for the page
-page/            template.html and build.py, which builds index.html from a toy run
+page/            template.html and build.py, which builds the tutorial from a toy run
+index.html       the tutorial (built)
+data/            what the tutorial loads: toy.json (metadata) and raw arrays (energy grid, paths, drift field)
+assets/          images
 ```
 
 ## Use on your own problem
@@ -41,5 +44,9 @@ network `net` (any Flax module called as `net(t, x, scale)`).
 ```
 pip install -r requirements.txt
 python toy/train.py --out runs/toy          # 2000 iterations, 512 paths, about 1 min on a GPU, ~850 MB of records
-python page/build.py --run runs/toy         # writes index.html
+python page/build.py --run runs/toy         # writes index.html and data/
+python -m http.server                       # then open http://localhost:8000
 ```
+
+The page fetches `data/` when it opens, so it has to be served over HTTP (as on GitHub Pages); opening `index.html`
+directly from disk will not load the figures.

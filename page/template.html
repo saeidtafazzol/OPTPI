@@ -352,7 +352,7 @@ square one.</p>
 <li>Evaluating \(u^*\) this way is as inefficient as sampling the Boltzmann distribution directly.</li>
 <li>Back to square one.</li>
 </ul>
-<figure class="figure"><img class="rake" src="__RAKE_IMG__" alt="Two-panel meme: a figure steps on a rake and gets hit in the face; below, a skateboarder jumps a flight of stairs over the rake, clears it, and then steps on another rake at the bottom."></figure>
+<figure class="figure"><img class="rake" src="assets/rake.jpg" alt="Two-panel meme: a figure steps on a rake and gets hit in the face; below, a skateboarder jumps a flight of stairs over the rake, clears it, and then steps on another rake at the bottom."></figure>
 
 <h3 id="s2-5"><span class="n">2.5</span>Learning the control</h3>
 <p class="prose">However, here we can do a trick that is less natural for MCMC and PSO. The expectations in Eqs. 6–7 can equally be
@@ -588,7 +588,7 @@ energy \(U\) written in JAX; <code>toy/</code> holds the toy energy and the trai
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.1/plotly.min.js"></script>
-<script>
+<script type="module">
 renderMathInElement(document.body, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "\\(", right: "\\)", display: false }],
   throwOnError: false });
 
@@ -704,7 +704,11 @@ function symTips(root) {
 }
 symTips(document.body);
 
-const D = /*DATA*/null;
+// data for Figs. 1, 2 and 4 (written by page/build.py): metadata in toy.json, arrays as raw little-endian binaries
+const D = await fetch("data/toy.json").then((r) => r.json());
+const BIN = Object.fromEntries(await Promise.all(Object.entries(D.arrays).map(([k, a]) =>
+  fetch("data/" + a.file).then((r) => r.arrayBuffer()).then((b) => [k, a.dtype === "int16" ? scaled(new Int16Array(b), a.scale) : new Float32Array(b)]))));
+function scaled(a, s) { const o = new Float32Array(a.length); for (let i = 0; i < a.length; i++) o[i] = a[i] * s; return o; }
 
 // ------------------------------------------------------------------ navigation: rail highlight, progress, keys
 const railLinks = [...document.querySelectorAll("nav.rail a")];
@@ -749,10 +753,8 @@ bulletBtn.onclick = () => setBullets(!document.body.classList.contains("bullets"
 try { if (localStorage.getItem("bullets") === "1") setBullets(true); } catch (e) {}
 
 // ------------------------------------------------------------------ decoding
-function bytes(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
-function dec16(b64, scale) { const a = new Int16Array(bytes(b64)), o = new Float32Array(a.length); for (let i = 0; i < a.length; i++) o[i] = a[i] * scale; return o; }
-const E = new Float32Array(bytes(D.E));
-const RUN = Object.assign(D.run, { PATHS: dec16(D.run.paths, D.run.paths_s), DRIFT: dec16(D.run.drift, D.run.drift_s) });
+const E = BIN.energy;
+const RUN = Object.assign(D.run, { PATHS: BIN.paths, DRIFT: BIN.drift });
 const G = D.G, L = D.L, h = 2 * L / (G - 1);
 const gx = Array.from({ length: G }, (_, i) => -L + i * h);
 const NB = D.basins.length, NP = RUN.n, TN = RUN.Tn, F = RUN.frames.length;

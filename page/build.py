@@ -1,12 +1,16 @@
-"""Build index.html (the tutorial) from page/template.html and a toy training run (toy/train.py).
+"""Build the tutorial from page/template.html and a toy training run (toy/train.py).
 
-Inlines the toy landscape, the run's paths, weights and drift field for Fig. 4, and the numbers quoted in Section 3.2.
-KaTeX and Plotly load from jsDelivr (pinned in the template).
+Writes index.html (the template with the numbers quoted in Section 3.2 filled in) and, next to it, the data the page
+fetches when it opens:
+    data/toy.json     landscape and basin metadata, Fig. 4 frames and per-frame stats, and the list of binary arrays
+    data/energy.f32   toy energy on a G x G grid (float32)
+    data/paths.i16    every path at every shown iteration (int16, times the scale in toy.json)
+    data/drift.i16    the network's drift on a grid at a few flow times (int16, times its scale)
+All binaries are little-endian, row-major, with their shapes in toy.json. KaTeX and Plotly load from jsDelivr.
 
-usage: python page/build.py [--run runs/toy] [--out index.html]
+usage: python page/build.py [--run runs/toy] [--out .]
 """
 import argparse
-import base64
 import json
 import os
 import sys
@@ -22,15 +26,11 @@ from PI import MLPDrift  # noqa: E402
 from toy import energy as toy  # noqa: E402
 
 
-def b64(a):
-    return base64.b64encode(np.ascontiguousarray(a).tobytes()).decode()
-
-
 def q16(a):
-    """int16 quantization: (base64, scale) with a ~= int16 * scale."""
+    """int16 quantization: (array, scale) with a ~= int16 * scale."""
     a = np.asarray(a, np.float64)
     s = max(float(np.max(np.abs(a))), 1e-12) / 32000.0
-    return b64(np.round(a / s).astype(np.int16)), s
+    return np.round(a / s).astype("<i2"), s
 
 
 def export_run(run, mins, frame_every, path_stride=2, quiver=21):
@@ -79,30 +79,36 @@ def export_run(run, mins, frame_every, path_stride=2, quiver=21):
     mag = np.linalg.norm(drift, axis=-1)
     u95 = [float(np.percentile(mag[1:, k], 95)) or 1.0 for k in range(len(dts))]   # arrow scale per flow time
 
-    pb, ps = q16(pth)
-    db, ds = q16(drift)
     r_conv = (3 * np.sqrt(T) * toy.WIDTHS).round(4).tolist()
-    run_data = dict(frames=frames, n=P, Tn=len(tidx), tpath=(tidx / (N1 - 1)).tolist(), paths=pb, paths_s=ps,
-                    stats=stats, qx=qx.tolist(), dts=dts.tolist(), drift=db, drift_s=ds, r_conv=r_conv)
-    return run_data, u95, meta, ess, unres_all
+    run_data = dict(frames=frames, n=P, Tn=len(tidx), tpath=(tidx / (N1 - 1)).tolist(), stats=stats, qx=qx.tolist(),
+                    dts=dts.tolist(), r_conv=r_conv)
+    return run_data, dict(paths=q16(pth), drift=q16(drift)), u95, meta, ess, unres_all
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=os.path.join(HERE, "..", "runs", "toy"))
-    ap.add_argument("--out", default=os.path.join(HERE, "..", "index.html"))
+    ap.add_argument("--out", default=os.path.join(HERE, ".."), help="directory for index.html and data/")
     ap.add_argument("--frame_every", type=int, default=20)
     a = ap.parse_args()
 
     mins = toy.minima()
-    run, u95, meta, ess, unres = export_run(a.run, mins, a.frame_every)
+    run, q, u95, meta, ess, unres = export_run(a.run, mins, a.frame_every)
 
     G, L = 201, toy.DOMAIN
     gx = np.linspace(-L, L, G).astype(np.float32)
     GX, GY = np.meshgrid(gx, gx)
     E = np.asarray(jax.vmap(toy.energy)(jnp.asarray(np.stack([GX.ravel(), GY.ravel()], -1)))).reshape(G, G)
-    data = dict(L=L, G=G, E=b64(E.astype(np.float32)), basins=mins, T_model=meta["temperature"], n_paths=meta["paths"],
-                u95=u95, run=run)
+    arrays = {"energy": (E.astype("<f4"), None), **q}
+    os.makedirs(os.path.join(a.out, "data"), exist_ok=True)
+    index = {}
+    for name, (arr, scale) in arrays.items():
+        f = name + (".f32" if arr.dtype.kind == "f" else ".i16")
+        arr.tofile(os.path.join(a.out, "data", f))
+        index[name] = dict(file=f, dtype="float32" if arr.dtype.kind == "f" else "int16", shape=list(arr.shape),
+                           **({} if scale is None else {"scale": scale}))
+    data = dict(L=L, G=G, basins=mins, T_model=meta["temperature"], n_paths=meta["paths"], u95=u95, run=run, arrays=index)
+    json.dump(data, open(os.path.join(a.out, "data", "toy.json"), "w"), separators=(",", ":"))
 
     # numbers quoted in Section 3.2, all from this run
     window = 500
@@ -120,12 +126,12 @@ def main():
     }
 
     html = open(os.path.join(HERE, "template.html")).read()
-    img = "data:image/jpeg;base64," + base64.b64encode(open(os.path.join(HERE, "rake.jpg"), "rb").read()).decode()
-    for ph, val in [("__RAKE_IMG__", img), ("/*DATA*/null", json.dumps(data).replace("</", "<\\/")), *nums.items()]:
+    for ph, val in nums.items():
         assert ph in html, ph
         html = html.replace(ph, val)
-    open(a.out, "w").write(html)
-    print(f"{a.out}: {len(html.encode()) / 1e6:.1f} MB", nums)
+    open(os.path.join(a.out, "index.html"), "w").write(html)
+    sizes = {f: os.path.getsize(os.path.join(a.out, "data", f)) / 1e6 for f in os.listdir(os.path.join(a.out, "data"))}
+    print(f"index.html {len(html.encode()) / 1e3:.0f} kB, data/ " + ", ".join(f"{f} {v:.1f} MB" for f, v in sorted(sizes.items())), nums)
 
 
 if __name__ == "__main__":
