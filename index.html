@@ -102,11 +102,6 @@ p.fn { font-size: 14px; color: var(--muted); }
 .methods { margin: 8px 0 8px 4px; padding-left: 22px; }
 .methods li { margin: 4px 0; }
 
-/* bullet mode: long paragraphs swap with their bullet-point versions */
-ul.pts { display: none; margin: 10px 0; padding-left: 22px; }
-ul.pts li { margin: 3px 0; }
-body.bullets ul.pts { display: block; }
-body.bullets p.prose { display: none; }
 
 /* training-loop diagram */
 .loop svg { display: block; width: 100%; max-width: 640px; margin: 0 auto; font-family: var(--sans); }
@@ -170,7 +165,7 @@ canvas.anim { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; 
   <a class="sec" href="#code">Code</a>
   <a class="sec" href="#refs">References</a>
   <div class="keys"><kbd>←</kbd> <kbd>→</kbd> previous / next part<br><kbd>Home</kbd> top</div>
-  <div class="tools"><button id="bulletBtn" title="show long paragraphs as bullet points">• bullets</button><button id="expandAll" title="open or close every derivation">▸ derivations</button><button id="themeBtn" title="toggle theme">◐</button></div>
+  <div class="tools"><button id="expandAll" title="open or close every derivation">▸ derivations</button><button id="themeBtn" title="toggle theme">◐</button></div>
 </nav>
 
 <main>
@@ -185,16 +180,11 @@ canvas.anim { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; 
 <h2 id="s1"><span class="n">1</span>Optimization as a sampling problem</h2>
 
 <h3 id="s1-1"><span class="n">1.1</span>Local vs global search</h3>
-<p class="prose">Suppose that we are trying to minimize an energy function \(U(x)\) (as an example, the 2-D toy problem in Fig. 1).
+<p>Suppose that we are trying to minimize an energy function \(U(x)\) (as an example, the 2-D toy problem in Fig. 1).
 We have our friendly neighborhood gradient-based algorithms, which need an initial point, and most of them get stuck
 in the local minimum of the initial point's basin. Therefore, global search algorithms, such as the meta-heuristic
 Particle Swarm Optimization (PSO) or Simulated Annealing (SA), can be employed in a hybrid manner: they find the
 globally optimal basins, and within those basins the gradient-based algorithms optimize locally.</p>
-<ul class="pts">
-<li>Goal: minimize an energy \(U(x)\) (e.g., the 2-D toy in Fig. 1).</li>
-<li>Gradient-based methods need an initial point and get stuck in its basin.</li>
-<li>Hybrid: a global search (PSO, SA) finds the globally optimal basins; gradient-based methods optimize locally within them.</li>
-</ul>
 </div>
 
 <div class="col figure app card">
@@ -208,13 +198,9 @@ globally optimal basins, and within those basins the gradient-based algorithms o
 <p>Another way to look at optimization is sampling: finding the minimum of \(U(x)\) is exactly the same as sampling from
 the Boltzmann distribution</p>
 $$P(x) = \lim_{T \downarrow 0} \frac{e^{-U(x)/T}}{Z(T)}, \qquad Z(T) = \int e^{-U(x)/T}\,dx. \tag{1}$$
-<p class="prose">Note that if there are multiple minimizers with equal \(U(x)\), this sampler will pick all of them: uniformly when
+<p>Note that if there are multiple minimizers with equal \(U(x)\), this sampler will pick all of them: uniformly when
 they have equal minima and curvature, and in general with probabilities \(\propto 1/\sqrt{\det \nabla^2 U}\) at each
 minimizer.</p>
-<ul class="pts">
-<li>Multiple minimizers with equal \(U\): the sampler picks all of them.</li>
-<li>Uniformly with equal minima and curvature; in general \(\propto 1/\sqrt{\det \nabla^2 U}\).</li>
-</ul>
 </div>
 
 <div class="col figure app card">
@@ -238,18 +224,12 @@ minimizer.</p>
 
 <div class="col">
 <h3 id="s1-3"><span class="n">1.3</span>How to sample</h3>
-<p class="prose">The sampling problem can be solved with Markov Chain Monte Carlo (MCMC), or, as here, with Path Integral Sampling,
+<p>The sampling problem can be solved with Markov Chain Monte Carlo (MCMC), or, as here, with Path Integral Sampling,
 which solves a special case of the Schrödinger bridge problem (from a single point to the target distribution, also
 known as the Schrödinger–Föllmer process). Before we head into it, note that sampling directly from the aforementioned
 Boltzmann distribution is very inefficient, given that the normalizing factor \(Z(T)\) requires an integration over all
 possible optimization variables, which is simply brute force. In this tutorial, we will focus on Path Integral
 Sampling as a means of optimization or, equivalently, of sampling from the constructed Boltzmann distribution.</p>
-<ul class="pts">
-<li>Samplers: MCMC, or here, Path Integral Sampling.</li>
-<li>Path Integral Sampling: a special case of the Schrödinger bridge (single point → target), the Schrödinger–Föllmer process.</li>
-<li>Sampling the Boltzmann distribution directly is inefficient: \(Z(T)\) integrates over all variables, i.e., brute force.</li>
-<li>Focus: Path Integral Sampling as optimization, i.e., sampling the Boltzmann distribution.</li>
-</ul>
 
 <!-- ======================================================================= 2 -->
 <h2 id="s2"><span class="n">2</span>Summary of the path integral sampler</h2>
@@ -343,32 +323,20 @@ Dividing by \(\phi\) gives Eq. 6.</p>
 </div></details>
 
 <h3 id="s2-4"><span class="n">2.4</span>Back to square one?</h3>
-<p class="prose">Please note that the expectations in Eq. 6 are calculated under the measure \(Q^0\), which means that \(X_T\) is
+<p>Please note that the expectations in Eq. 6 are calculated under the measure \(Q^0\), which means that \(X_T\) is
 distributed as under pure noise. Now the problem is that evaluating the optimal control this way is highly inefficient;
 indeed, it is about as inefficient as sampling directly from the Boltzmann distribution, so it feels like we are back to
 square one.</p>
-<ul class="pts">
-<li>Eq. 6 is under \(Q^0\): \(X_T\) is pure noise.</li>
-<li>Evaluating \(u^*\) this way is as inefficient as sampling the Boltzmann distribution directly.</li>
-<li>Back to square one.</li>
-</ul>
 <figure class="figure"><img class="rake" src="assets/rake.jpg" alt="Two-panel meme: a figure steps on a rake and gets hit in the face; below, a skateboarder jumps a flight of stairs over the rake, clears it, and then steps on another rake at the bottom."></figure>
 
 <h3 id="s2-5"><span class="n">2.5</span>Learning the control</h3>
-<p class="prose">However, here we can do a trick that is less natural for MCMC and PSO. The expectations in Eqs. 6–7 can equally be
+<p>However, here we can do a trick that is less natural for MCMC and PSO. The expectations in Eqs. 6–7 can equally be
 taken under any controlled measure \(Q^u\) and reweighted (importance sampling with Girsanov's theorem), so we can learn
 \(u_\theta\), for instance as the output of a Neural Network (NN), which gradually becomes better and hopefully gets close
 to the actual \(u^*\): each improvement of \(u_\theta\) makes the next batch of paths, and therefore the next estimate,
 better (Fig. 3). Unlike a Markov chain or a swarm, the result is a reusable sampler: a single SDE rollout gives a new independent
 sample, and the network can be conditioned on the problem, so the search does not restart from scratch for every new
 problem.</p>
-<ul class="pts">
-<li>Trick: take the expectations in Eqs. 6–7 under any controlled \(Q^u\) and reweight (importance sampling, Girsanov).</li>
-<li>Learn \(u_\theta\) (e.g., a NN) that gradually gets close to \(u^*\).</li>
-<li>Better \(u_\theta\) → better paths → better estimate (Fig. 3).</li>
-<li>Unlike MCMC/PSO: a reusable sampler; one SDE rollout = one new independent sample.</li>
-<li>Can be conditioned on the problem: no restart from scratch.</li>
-</ul>
 
 <figure class="figure card loop">
 <svg viewBox="0 0 640 196" role="img" aria-label="Training loop: the drift u_theta drives the rollout and train step, which returns an improved u_theta">
@@ -401,12 +369,8 @@ $$\begin{aligned}\phi(t,x) &= \mathbb{E}_{Q^u}\left[e^{-\Psi(X_T)}\left(\frac{dQ
 measure and the one the network drives (Path Integral Cross-Entropy, PICE).</p>
 
 <h3 id="s2-6"><span class="n">2.6</span>Forward KL (PICE)</h3>
-<p class="prose">The gradient of the forward KL cannot be calculated directly, since its expectation is under \(Q^*\), which we
+<p>The gradient of the forward KL cannot be calculated directly, since its expectation is under \(Q^*\), which we
 cannot sample from, so we need to resort to importance sampling. More concretely, we need to evaluate</p>
-<ul class="pts">
-<li>Expectation under \(Q^*\), which we cannot sample → importance sampling.</li>
-<li>We need:</li>
-</ul>
 $$-\partial_{\theta}D_{KL}\left(Q^* \,\middle\|\, Q^{u_\theta} \,\middle|\, X_t = x\right)_{[t,T]} = \mathbb{E}_{Q^*}\left[\int_t^T\frac{\partial_{\theta}u_{\theta}(s,X_s)^\top dX_s}{\sigma(s)^2} - \int_t^T\frac{\partial_{\theta}u_{\theta}^\top u_{\theta}}{\sigma(s)^2}\,ds\,\middle|\, X_t = x\right]. \tag{8}$$
 
 <details class="more"><summary>Derivation: Eq. 8</summary><div class="body">
@@ -459,15 +423,10 @@ $$\begin{aligned}
 \(\tfrac12\sum_i w_i \sum_k \frac{\Delta t}{\sigma_k^2}\big\|\Delta X^{(i)}_k/\Delta t - u_\theta(t_k, X^{(i)}_k)\big\|^2\), whose negative \(\theta\)-gradient is the discretized \(\sum_i w_i F^{(i)}\).</p>
 </div></details>
 <h3 id="s2-7"><span class="n">2.7</span>The Schrödinger–Föllmer sampler</h3>
-<p class="prose">So far, we have talked about how to solve a general SOC problem, but we haven't talked about the Schrödinger–Föllmer
+<p>So far, we have talked about how to solve a general SOC problem, but we haven't talked about the Schrödinger–Föllmer
 part. If we set \(\Psi = \log(d\mu^0/d\mu)\), where \(\mu^0\) is the Gaussian distribution constructed by pure Brownian
 motion (the endpoint distribution of the uncontrolled SDE started at \(x_0\)) and \(\mu\) is the target distribution, the
 optimally controlled SDE is proved to be a sampler of the target distribution:</p>
-<ul class="pts">
-<li>So far: a general SOC problem. Missing: the Schrödinger–Föllmer part.</li>
-<li>\(\Psi = \log(d\mu^0/d\mu)\); \(\mu^0\): the Gaussian from pure Brownian motion, \(\mu\): the target.</li>
-<li>Then the optimally controlled SDE is proved to sample \(\mu\):</li>
-</ul>
 $$\Psi(x) = \log\frac{d\mu^0}{d\mu}(x) = \log\mu^0(x) - \log\mu(x) \quad\Longrightarrow\quad X^{u^*}_T \sim \mu, \tag{11}$$
 <p>where \(\mu^0 = \mathcal{N}(x_0, \bar\sigma^2 I)\) with \(\bar\sigma^2 = \int_0^T \sigma(r)^2\,dr\). The normalizing constant of \(\mu\) is not needed: it shifts \(\Psi\) by a constant, which scales \(\phi\) but leaves
 \(u^* = \sigma^2\partial_x\log\phi\) unchanged.</p>
@@ -506,19 +465,11 @@ $$\mathbb{P}\left[x^*_T \in A\right] = \int_A Q^*_{0,T}(x_0,y)\,dy = \int_A e^{-
 <h2 id="s3"><span class="n">3</span>PICE on the toy problem</h2>
 
 <h3 id="s3-1"><span class="n">3.1</span>Setup</h3>
-<p class="prose">We now train PICE on the toy problem of Section 1. The target is the Boltzmann distribution of \(U\) at the
+<p>We now train PICE on the toy problem of Section 1. The target is the Boltzmann distribution of \(U\) at the
 temperature \(T\), and with the SDE starting at \(x_0 = 0\), Eq. 11 gives the terminal cost</p>
-<ul class="pts">
-<li>PICE on the toy of Section 1; target: the Boltzmann distribution of \(U\) at temperature \(T\).</li>
-<li>SDE starts at \(x_0 = 0\); terminal cost from Eq. 11:</li>
-</ul>
 $$\mu(x) \propto e^{-U(x)/T}, \qquad \Psi(x) = \frac{U(x)}{T} - \frac{\|x\|^2}{2\bar\sigma^2}. \tag{12}$$
-<p class="prose">At \(T = 0.05\), 99.5% of the mass of \(\mu\) is on A and B, split evenly. So the sampler has to find both narrow
+<p>At \(T = 0.05\), 99.5% of the mass of \(\mu\) is on A and B, split evenly. So the sampler has to find both narrow
 basins, far from each other and from the start, while E, the basin next to the start, holds almost none of it.</p>
-<ul class="pts">
-<li>At \(T = 0.05\): 99.5% of \(\mu\) on A and B, split evenly.</li>
-<li>The sampler must find both narrow, distant basins; E, next to the start, holds almost none of the mass.</li>
-</ul>
 <details class="more"><summary>Toy settings</summary><div class="body">
 <p>Here the SDE horizon is \([0,1]\), and \(T\) denotes the temperature. \(T = 0.05\), 100 Euler–Maruyama steps, \(\sigma(t)\)
 linear from 5.99 to 0.05 so that \(\bar\sigma = 3.5\), 512 paths per iteration, an MLP drift (3 × 128, SiLU) initialized to
@@ -527,17 +478,11 @@ linear from 5.99 to 0.05 so that \(\bar\sigma = 3.5\), 512 paths per iteration, 
 </div></details>
 
 <h3 id="s3-2"><span class="n">3.2</span>Training demo</h3>
-<p class="prose">To see the training in effect, we can look at the demo below. At first, only a handful of paths land inside the
+<p>To see the training in effect, we can look at the demo below. At first, only a handful of paths land inside the
 narrow basins A and B, so one or two paths carry almost all of the weight (effective sample size at most 10 of 512 for
 368 of the first 500 iterations), and the update swings between A and B. Still, those few paths guide the model in the right direction, as they do
 in a well-behaved problem with enough exploration and wide enough basins: from about iteration 920 on, fewer than 10% of the paths are left unresolved, and at iteration 1980, 50% of the paths are in A,
 46% in B, and 4% unresolved.</p>
-<ul class="pts">
-<li>Early on, few paths land in the narrow basins A and B: one or two carry the weight (ESS \(\le\) 10 of 512 for 368 of the first 500 iterations).</li>
-<li>The update swings between A and B.</li>
-<li>Still, those few paths guide the model in the right direction: under 10% unresolved from iteration ~920.</li>
-<li>Iteration 1980: A 50%, B 46%, unresolved 4%.</li>
-</ul>
 </div>
 
 <div class="col figure app card" id="demo">
@@ -593,7 +538,7 @@ renderMathInElement(document.body, { delimiters: [{ left: "$$", right: "$$", dis
   throwOnError: false });
 
 // ------------------------------------------------------------------ hover tips on the symbols defined in the text
-// Each KaTeX leaf (Q, Psi, phi, lambda, ...) is described from its base letter, its sub/superscripts and the section it is in.
+// Each KaTeX leaf (Q, Psi, phi, ...) is described from its base letter, its sub/superscripts and the section it is in.
 function symScripts(leaf) {
   // the scripts attached to a leaf: KaTeX puts them in the .msupsub after the leaf (or after its \bar / \tilde wrapper)
   let host = leaf, accent = null;
@@ -691,7 +636,7 @@ function symTips(root) {
   }
   for (const leaf of root.querySelectorAll(".katex-html span.mord")) {
     if (leaf.childElementCount || leaf.closest(".sym") || leaf.closest(".accent-body")) continue;
-    // scripts of a described symbol (X_T, lambda_m) sit inside its .sym and were skipped above; scripts of other bases
+    // scripts of a described symbol (X_T, u_theta) sit inside its .sym and were skipped above; scripts of other bases
     // (Psi in e^{-Psi}, Q^0 in E_{Q^0}, integral limits) get their own tips, except the subscript of a derivative (d_x, d_t)
     const ss = leaf.closest(".msupsub");
     if (ss && ss.previousElementSibling && ss.previousElementSibling.textContent === "∂") continue;
@@ -742,15 +687,6 @@ expandBtn.onclick = () => {
   all.forEach(d => d.open = open);
   expandBtn.textContent = (open ? "▾" : "▸") + " derivations";
 };
-const bulletBtn = document.getElementById("bulletBtn");
-function setBullets(on) {
-  document.body.classList.toggle("bullets", on);
-  bulletBtn.classList.toggle("on", on);
-  bulletBtn.textContent = on ? "¶ prose" : "• bullets";
-  try { localStorage.setItem("bullets", on ? "1" : "0"); } catch (e) {}
-}
-bulletBtn.onclick = () => setBullets(!document.body.classList.contains("bullets"));
-try { if (localStorage.getItem("bullets") === "1") setBullets(true); } catch (e) {}
 
 // ------------------------------------------------------------------ decoding
 const E = BIN.energy;
@@ -1002,7 +938,6 @@ btns.train.onclick = () => start("train"); btns.flow.onclick = () => start("flow
   if (q.has("T")) tSlider.value = Math.log10(+q.get("T")).toFixed(2);
   if (q.has("it")) { const want = +q.get("it"); let best = 0; RUN.frames.forEach((v, i) => { if (Math.abs(v - want) < Math.abs(RUN.frames[best] - want)) best = i; }); itSlider.value = best; }
   if (q.has("t")) { const want = +q.get("t"); let best = 0; RUN.tpath.forEach((v, i) => { if (Math.abs(v - want) < Math.abs(RUN.tpath[best] - want)) best = i; }); flowSlider.value = best; }
-  if (q.has("b")) setBullets(q.get("b") !== "0");
   if (q.has("open")) document.querySelectorAll("details.more").forEach(d => d.open = true);
 })();
 function relayoutAll() { drawLandscape(); drawBoltz(); draw(); }
